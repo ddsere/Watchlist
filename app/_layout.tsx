@@ -49,3 +49,7 @@ export default function RootLayout() {
     </Stack>
   );
 }
+
+function setupNotificationChannel() {
+  throw new Error("Function not implemented.");
+}

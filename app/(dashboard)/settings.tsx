@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Switch, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useTheme } from '../../theme';
+import { scheduleWeekendReminders, cancelAllReminders, requestNotificationPermissions } from '../../services/notifications';
 
 export default function Settings() {
   const { themeMode, setThemeMode, loadTheme } = useThemeStore();
@@ -12,12 +14,39 @@ export default function Settings() {
 
   useEffect(() => {
     loadTheme();
+    loadNotificationPreference();
   }, []);
 
-  const handleNotificationToggle = (value: boolean) => {
-    setNotificationsEnabled(value);
+  const loadNotificationPreference = async () => {
+    try {
+      const savedPref = await AsyncStorage.getItem('weekend_notifications');
+      if (savedPref === 'true') {
+        setNotificationsEnabled(true);
+      }
+    } catch (error) {
+      console.error("Error loading notification pref:", error);
+    }
+  };
+
+  const handleNotificationToggle = async (value: boolean) => {
     if (value) {
-      Alert.alert("Notifications Enabled", "You will now receive weekend watchlist reminders.");
+      const hasPermission = await requestNotificationPermissions();
+      if (!hasPermission) {
+        Alert.alert("Permission Denied", "Please enable notifications in your device settings to receive weekend reminders.");
+        return;
+      }
+      
+      const scheduled = await scheduleWeekendReminders();
+      if (scheduled) {
+        setNotificationsEnabled(true);
+        await AsyncStorage.setItem('weekend_notifications', 'true');
+        Alert.alert("Notifications Enabled", "You will now receive weekend watchlist reminders.");
+      }
+    } else {
+      await cancelAllReminders();
+      setNotificationsEnabled(false);
+      await AsyncStorage.setItem('weekend_notifications', 'false');
+      Alert.alert("Notifications Disabled", "Weekend reminders have been turned off.");
     }
   };
 
