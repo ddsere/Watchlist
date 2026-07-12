@@ -8,15 +8,14 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useAuthStore } from '../../store/useAuthStore';
 
-// 1. Custom Drawer Content Component එක සෑදීම
 function CustomDrawerContent(props: any) {
   const { user, role, logout } = useAuthStore();
 
   const handleLogout = async () => {
     try {
-      await signOut(auth); // Firebase එකෙන් ලොග් අවුට් වීම
-      logout(); // Zustand Store එක හිස් කිරීම
-      router.replace('/(auth)/login'); // නැවත Login පිටුවට යැවීම
+      await signOut(auth); 
+      logout(); 
+      router.replace('/(auth)/login' as any); 
     } catch (error) {
       console.error("Logout Error:", error);
     }
@@ -24,10 +23,7 @@ function CustomDrawerContent(props: any) {
 
   return (
     <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1, backgroundColor: '#1e293b' }}>
-      
-      {/* Drawer Header: User Avatar & Details */}
       <View className="p-5 border-b border-slate-700 mb-2">
-        {/* Profile Picture එක ඇත්නම් එය පෙන්වීම, නැත්නම් මුල් අකුර පෙන්වීම */}
         {user?.photoURL ? (
           <Image 
             source={{ uri: user.photoURL }} 
@@ -40,8 +36,6 @@ function CustomDrawerContent(props: any) {
             </Text>
           </View>
         )}
-        
-        {/* Hello, [Name] ආකාරයට පෙන්වීම */}
         <Text className="text-white font-bold text-lg">
           Hello, {user?.displayName || 'User'}
         </Text>
@@ -50,75 +44,46 @@ function CustomDrawerContent(props: any) {
         </Text>
       </View>
 
-      {/* Main Menu Items (Tabs වලට Navigation) */}
-      <DrawerItem
-        label="Home"
-        labelStyle={{ color: '#ffffff', fontSize: 16 }}
-        onPress={() => router.push('/(dashboard)/(tabs)')}
-      />
-      <DrawerItem
-        label="Search"
-        labelStyle={{ color: '#ffffff', fontSize: 16 }}
-        onPress={() => router.push('/(dashboard)/(tabs)/search')}
-      />
-      <DrawerItem
-        label="Watchlist"
-        labelStyle={{ color: '#ffffff', fontSize: 16 }}
-        onPress={() => router.push('/(dashboard)/(tabs)/watchlist')}
-      />
-      <DrawerItem
-        label="Profile"
-        labelStyle={{ color: '#ffffff', fontSize: 16 }}
-        onPress={() => router.push('/(dashboard)/(tabs)/profile')}
-      />
+      <DrawerItem label="Home" labelStyle={{ color: '#ffffff', fontSize: 16 }} onPress={() => router.push('/(dashboard)/(tabs)' as any)} />
+      <DrawerItem label="Search" labelStyle={{ color: '#ffffff', fontSize: 16 }} onPress={() => router.push('/(dashboard)/(tabs)/search' as any)} />
+      <DrawerItem label="Watchlist" labelStyle={{ color: '#ffffff', fontSize: 16 }} onPress={() => router.push('/(dashboard)/(tabs)/watchlist' as any)} />
+      <DrawerItem label="Profile" labelStyle={{ color: '#ffffff', fontSize: 16 }} onPress={() => router.push('/(dashboard)/(tabs)/profile' as any)} />
 
-      {/* Admin Panel (Conditional Rendering) */}
       {role === 'admin' && (
-        <DrawerItem
-          label="Admin Panel"
-          labelStyle={{ color: '#ef4444', fontWeight: 'bold', fontSize: 16 }}
-          onPress={() => router.push('/(dashboard)/admin')}
-        />
+        <DrawerItem label="Admin Panel" labelStyle={{ color: '#ef4444', fontWeight: 'bold', fontSize: 16 }} onPress={() => router.push('/(dashboard)/admin' as any)} />
       )}
-
-      {/* Settings */}
-      <DrawerItem
-        label="Settings"
-        labelStyle={{ color: '#ffffff', fontSize: 16 }}
-        onPress={() => router.push('/(dashboard)/settings')}
-      />
-
-      {/* හිස් ඉඩක් (Spacer) තබා Logout එක යටටම තල්ලු කිරීම */}
+      <DrawerItem label="Settings" labelStyle={{ color: '#ffffff', fontSize: 16 }} onPress={() => router.push('/(dashboard)/settings' as any)} />
+      
       <View className="flex-1" />
-
-      {/* Logout Button */}
-      <TouchableOpacity 
-        className="m-4 bg-slate-800 border border-slate-700 p-4 rounded-xl flex-row justify-center"
-        onPress={handleLogout}
-      >
+      <TouchableOpacity className="m-4 bg-slate-800 border border-slate-700 p-4 rounded-xl flex-row justify-center" onPress={handleLogout}>
         <Text className="text-red-500 font-bold text-base">Logout</Text>
       </TouchableOpacity>
-      
     </DrawerContentScrollView>
   );
 }
 
-// 2. Main Dashboard Layout එක
 export default function DashboardLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer
         drawerContent={(props) => <CustomDrawerContent {...props} />}
         screenOptions={{ 
-          headerShown: true,
           headerStyle: { backgroundColor: '#0f172a', borderBottomWidth: 0, shadowOpacity: 0 },
           headerTintColor: '#ffffff',
           drawerStyle: { backgroundColor: '#1e293b' },
         }}
       >
-        <Drawer.Screen name="(tabs)" options={{ title: 'Watchlist' }} />
-        <Drawer.Screen name="admin" options={{ title: 'Admin Panel' }} />
-        <Drawer.Screen name="settings" options={{ title: 'Settings' }} />
+        <Drawer.Screen name="(tabs)" options={{ title: 'Watchlist', headerShown: false }} />
+        <Drawer.Screen name="admin" options={{ title: 'Admin Panel', headerShown: true }} />
+        <Drawer.Screen name="settings" options={{ title: 'Settings', headerShown: true }} />
+        
+        <Drawer.Screen 
+          name="movie/[id]" 
+          options={{ 
+            headerShown: false,
+            drawerItemStyle: { display: 'none' } 
+          }} 
+        />
       </Drawer>
     </GestureHandlerRootView>
   );

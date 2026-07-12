@@ -57,3 +57,54 @@ export const getMovieDetails = async (movieId: number) => {
     return null;
   }
 };
+
+export const getMovieCredits = async (movieId: number) => {
+  try {
+    const response = await fetch(`${BASE_URL}/movie/${movieId}/credits?api_key=${TMDB_API_KEY}&language=en-US`);
+    const data = await response.json();
+    return data.cast || [];
+  } catch (error) {
+    console.error("Error fetching movie credits:", error);
+    return [];
+  }
+};
+
+export const getMovieGenres = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/genre/movie/list?api_key=${TMDB_API_KEY}&language=en-US`);
+    const data = await response.json();
+    return data.genres || [];
+  } catch (error) {
+    console.error("Error fetching genres:", error);
+    return [];
+  }
+};
+
+export const searchMoviesByActor = async (actorName: string) => {
+  try {
+    const personRes = await fetch(`${BASE_URL}/search/person?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(actorName)}&language=en-US&page=1`);
+    const personData = await personRes.json();
+    
+    if (personData.results && personData.results.length > 0) {
+      const personId = personData.results[0].id;
+      const creditsRes = await fetch(`${BASE_URL}/person/${personId}/movie_credits?api_key=${TMDB_API_KEY}&language=en-US`);
+      const creditsData = await creditsRes.json();
+      return creditsData.cast || [];
+    }
+    return [];
+  } catch (error) {
+    console.error("Error searching by actor:", error);
+    return [];
+  }
+};
+
+export const discoverMoviesByGenre = async (genreId: number) => {
+  try {
+    const response = await fetch(`${BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${genreId}&language=en-US&page=1`);
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.error("Error discovering by genre:", error);
+    return [];
+  }
+};
