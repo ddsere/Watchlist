@@ -1,23 +1,32 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type ThemeMode = 'light' | 'dark' | 'system';
-
 interface ThemeState {
-  themeMode: ThemeMode;
-  setThemeMode: (mode: ThemeMode) => void;
+  themeMode: 'light' | 'dark' | 'system';
+  setThemeMode: (mode: 'light' | 'dark' | 'system') => void;
+  loadTheme: () => Promise<void>;
 }
 
-export const useThemeStore = create<ThemeState>()(
-  persist(
-    (set) => ({
-      themeMode: 'system',
-      setThemeMode: (mode) => set({ themeMode: mode }),
-    }),
-    {
-      name: 'theme-storage',
-      storage: createJSONStorage(() => AsyncStorage),
+export const useThemeStore = create<ThemeState>((set) => ({
+  themeMode: 'dark', 
+
+  setThemeMode: async (mode) => {
+    set({ themeMode: mode });
+    try {
+      await AsyncStorage.setItem('app_theme', mode);
+    } catch (error) {
+      console.error('Error saving theme:', error);
     }
-  )
-);
+  },
+
+  loadTheme: async () => {
+    try {
+      const savedTheme = await AsyncStorage.getItem('app_theme');
+      if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') {
+        set({ themeMode: savedTheme });
+      }
+    } catch (error) {
+      console.error('Error loading theme:', error);
+    }
+  }
+}));
