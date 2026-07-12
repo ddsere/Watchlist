@@ -6,11 +6,13 @@ import { getMovieDetails, getMovieCredits } from '../../../services/tmdb';
 import { getOmdbRatings } from '../../../services/omdb';
 import { toggleWatchlistStatus, getWatchlistStatus, addReview, getMovieReviews, updateReview, deleteReview } from '../../../services/firestore';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { useTheme } from '../../../theme';
 
 export default function MovieDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { user, role } = useAuthStore(); 
+  const { colors } = useTheme();
   
   const [movie, setMovie] = useState<any>(null);
   const [cast, setCast] = useState<any[]>([]);
@@ -20,7 +22,6 @@ export default function MovieDetail() {
   const [watchStatus, setWatchStatus] = useState<'to_watch' | 'watched' | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Review State එක
   const [reviews, setReviews] = useState<any[]>([]);
   const [isReviewModalVisible, setReviewModalVisible] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
@@ -29,15 +30,12 @@ export default function MovieDetail() {
   const [reviewLoading, setReviewLoading] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      fetchDetails();
-    }
+    if (id) fetchDetails();
   }, [id]);
 
   const fetchDetails = async () => {
     setLoading(true);
     const movieId = parseInt(id as string);
-    
     const detailsData = await getMovieDetails(movieId);
     setMovie(detailsData);
     
@@ -51,12 +49,10 @@ export default function MovieDetail() {
       setOmdbData(omdbRatings);
       setReviews(reviewsData);
     }
-    
     if (user?.uid) {
       const currentStatus = await getWatchlistStatus(user.uid, movieId);
       setWatchStatus(currentStatus);
     }
-    
     setLoading(false);
   };
 
@@ -66,38 +62,23 @@ export default function MovieDetail() {
     const statusToSave = watchStatus === newStatus ? null : newStatus;
     const success = await toggleWatchlistStatus(user.uid, movie, statusToSave);
     if (success) setWatchStatus(statusToSave);
-    else Alert.alert("Error", "Failed to update watchlist.");
     setActionLoading(false);
   };
 
   const handleSaveReview = async () => {
-    if (reviewRating === 0) {
-      Alert.alert("Required", "Please provide a star rating.");
-      return;
-    }
-    if (!reviewText.trim()) {
-      Alert.alert("Required", "Please write a review.");
-      return;
-    }
-    
+    if (reviewRating === 0 || !reviewText.trim()) return Alert.alert("Required", "Please provide a rating and a review.");
     setReviewLoading(true);
     if (editingReviewId) {
-      // Edit Review
       const success = await updateReview(editingReviewId, reviewRating, reviewText);
       if (success) {
         setReviews(reviews.map(r => r.id === editingReviewId ? { ...r, rating: reviewRating, text: reviewText } : r));
         closeReviewModal();
-      } else {
-        Alert.alert("Error", "Failed to update review.");
       }
     } else {
-      // New Review
       const newReview = await addReview(user, movie, reviewRating, reviewText);
       if (newReview) {
         setReviews([newReview, ...reviews]);
         closeReviewModal();
-      } else {
-        Alert.alert("Error", "Failed to post review.");
       }
     }
     setReviewLoading(false);
@@ -108,11 +89,7 @@ export default function MovieDetail() {
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: async () => {
           const success = await deleteReview(reviewId);
-          if (success) {
-            setReviews(reviews.filter(r => r.id !== reviewId));
-          } else {
-            Alert.alert("Error", "Failed to delete review.");
-          }
+          if (success) setReviews(reviews.filter(r => r.id !== reviewId));
         }
       }
     ]);
@@ -138,177 +115,144 @@ export default function MovieDetail() {
     return rating ? rating.Value : 'N/A';
   };
 
-  if (loading || !movie) {
-    return (
-      <View className="flex-1 bg-slate-900 justify-center items-center">
-        <ActivityIndicator size="large" color="#ef4444" />
-      </View>
-    );
-  }
+  if (loading || !movie) return <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
   return (
-    <View className="flex-1 bg-slate-900">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="relative mb-16">
-          <TouchableOpacity className="absolute top-12 left-4 z-10 bg-black/50 p-2 rounded-full" onPress={() => router.back()}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        <View style={{ position: 'relative', marginBottom: 64 }}>
+          <TouchableOpacity style={{ position: 'absolute', top: 48, left: 16, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 20 }} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          <Image source={{ uri: `https://image.tmdb.org/t/p/w780${movie.backdrop_path}` }} className="w-full h-64 bg-slate-800" resizeMode="cover" />
-          <View className="absolute w-full h-64 bg-slate-900/40" />
-          <View className="absolute -bottom-12 left-4 flex-row items-end">
-            <Image source={{ uri: `https://image.tmdb.org/t/p/w342${movie.poster_path}` }} className="w-32 h-48 rounded-xl border-2 border-slate-900 bg-slate-700" resizeMode="cover" />
-            <View className="ml-4 flex-1 pb-2">
-              <Text className="text-white font-bold text-2xl" numberOfLines={2}>{movie.title}</Text>
-              <Text className="text-slate-400 text-base font-semibold">
+          <Image source={{ uri: `https://image.tmdb.org/t/p/w780${movie.backdrop_path}` }} style={{ width: '100%', height: 256, backgroundColor: colors.border }} resizeMode="cover" />
+          <View style={{ position: 'absolute', width: '100%', height: 256, backgroundColor: 'rgba(0,0,0,0.4)' }} />
+          <View style={{ position: 'absolute', bottom: -48, left: 16, flexDirection: 'row', alignItems: 'flex-end' }}>
+            <Image source={{ uri: `https://image.tmdb.org/t/p/w342${movie.poster_path}` }} style={{ width: 128, height: 192, borderRadius: 12, borderWidth: 2, borderColor: colors.background, backgroundColor: colors.border }} resizeMode="cover" />
+            <View style={{ marginLeft: 16, flex: 1, paddingBottom: 8 }}>
+              <Text style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 24, textShadowColor: 'rgba(0,0,0,0.75)', textShadowOffset: {width: 0, height: 1}, textShadowRadius: 3 }} numberOfLines={2}>{movie.title}</Text>
+              <Text style={{ color: '#cbd5e1', fontSize: 16, fontWeight: '600', textShadowColor: 'rgba(0,0,0,0.75)', textShadowOffset: {width: 0, height: 1}, textShadowRadius: 3 }}>
                 {movie.release_date ? movie.release_date.substring(0, 4) : ''} • {movie.runtime ? `${movie.runtime} min` : ''}
               </Text>
             </View>
           </View>
         </View>
 
-        <View className="px-4">
-          <View className="flex-row flex-wrap mb-4">
+        <View style={{ paddingHorizontal: 16 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 }}>
             {movie.genres?.map((genre: any) => (
-              <View key={genre.id} className="bg-slate-800 px-3 py-1 rounded-full mr-2 mb-2 border border-slate-700">
-                <Text className="text-slate-300 text-xs font-semibold">{genre.name}</Text>
+              <View key={genre.id} style={{ backgroundColor: colors.surface, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginRight: 8, marginBottom: 8, borderWidth: 1, borderColor: colors.border }}>
+                <Text style={{ color: colors.textMuted, fontSize: 12, fontWeight: '600' }}>{genre.name}</Text>
               </View>
             ))}
           </View>
 
-          <View className="flex-row justify-start mb-6 space-x-4 gap-4">
-            <View className="items-center">
-              <Text className="text-yellow-500 font-bold text-lg">{getRatingValue("Internet Movie Database")}</Text>
-              <Text className="text-slate-500 text-[10px]">IMDb</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 24, gap: 16 }}>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ color: '#eab308', fontWeight: 'bold', fontSize: 18 }}>{getRatingValue("Internet Movie Database")}</Text>
+              <Text style={{ color: colors.textMuted, fontSize: 10 }}>IMDb</Text>
             </View>
-            <View className="items-center">
-              <Text className="text-red-500 font-bold text-lg">{getRatingValue("Rotten Tomatoes")}</Text>
-              <Text className="text-slate-500 text-[10px]">Rotten Tomatoes</Text>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ color: '#ef4444', fontWeight: 'bold', fontSize: 18 }}>{getRatingValue("Rotten Tomatoes")}</Text>
+              <Text style={{ color: colors.textMuted, fontSize: 10 }}>Rotten Tomatoes</Text>
             </View>
-            <View className="items-center">
-              <Text className="text-green-500 font-bold text-lg">{getRatingValue("Metacritic")}</Text>
-              <Text className="text-slate-500 text-[10px]">Metacritic</Text>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ color: '#10b981', fontWeight: 'bold', fontSize: 18 }}>{getRatingValue("Metacritic")}</Text>
+              <Text style={{ color: colors.textMuted, fontSize: 10 }}>Metacritic</Text>
             </View>
           </View>
 
-          <View className="flex-row justify-between mb-6">
-            <TouchableOpacity className={`flex-1 p-3 rounded-xl mr-2 items-center border ${watchStatus === 'to_watch' ? 'bg-red-500/20 border-red-500' : 'bg-slate-800 border-slate-700'}`} onPress={() => handleToggleStatus('to_watch')} disabled={actionLoading}>
-              <Ionicons name={watchStatus === 'to_watch' ? "bookmark" : "add"} size={20} color={watchStatus === 'to_watch' ? "#ef4444" : "#94a3b8"} />
-              <Text className={`text-xs font-bold mt-1 ${watchStatus === 'to_watch' ? 'text-red-500' : 'text-slate-400'}`}>{watchStatus === 'to_watch' ? 'In Watchlist' : 'Watchlist'}</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 }}>
+            <TouchableOpacity style={{ flex: 1, padding: 12, borderRadius: 12, marginRight: 8, alignItems: 'center', borderWidth: 1, backgroundColor: watchStatus === 'to_watch' ? 'rgba(239, 68, 68, 0.1)' : colors.surface, borderColor: watchStatus === 'to_watch' ? colors.primary : colors.border }} onPress={() => handleToggleStatus('to_watch')} disabled={actionLoading}>
+              <Ionicons name={watchStatus === 'to_watch' ? "bookmark" : "add"} size={20} color={watchStatus === 'to_watch' ? colors.primary : colors.textMuted} />
+              <Text style={{ fontSize: 12, fontWeight: 'bold', marginTop: 4, color: watchStatus === 'to_watch' ? colors.primary : colors.textMuted }}>{watchStatus === 'to_watch' ? 'In Watchlist' : 'Watchlist'}</Text>
             </TouchableOpacity>
-            <TouchableOpacity className={`flex-1 p-3 rounded-xl mr-2 items-center border ${watchStatus === 'watched' ? 'bg-green-500/20 border-green-500' : 'bg-slate-800 border-slate-700'}`} onPress={() => handleToggleStatus('watched')} disabled={actionLoading}>
-              <Ionicons name={watchStatus === 'watched' ? "checkmark-circle" : "checkmark-circle-outline"} size={20} color={watchStatus === 'watched' ? "#10b981" : "#94a3b8"} />
-              <Text className={`text-xs font-bold mt-1 ${watchStatus === 'watched' ? 'text-green-500' : 'text-slate-400'}`}>Watched</Text>
+            <TouchableOpacity style={{ flex: 1, padding: 12, borderRadius: 12, marginRight: 8, alignItems: 'center', borderWidth: 1, backgroundColor: watchStatus === 'watched' ? 'rgba(16, 185, 129, 0.1)' : colors.surface, borderColor: watchStatus === 'watched' ? '#10b981' : colors.border }} onPress={() => handleToggleStatus('watched')} disabled={actionLoading}>
+              <Ionicons name={watchStatus === 'watched' ? "checkmark-circle" : "checkmark-circle-outline"} size={20} color={watchStatus === 'watched' ? '#10b981' : colors.textMuted} />
+              <Text style={{ fontSize: 12, fontWeight: 'bold', marginTop: 4, color: watchStatus === 'watched' ? '#10b981' : colors.textMuted }}>Watched</Text>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-1 bg-red-500 p-3 rounded-xl items-center justify-center" onPress={() => setReviewModalVisible(true)}>
+            <TouchableOpacity style={{ flex: 1, backgroundColor: colors.primary, padding: 12, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }} onPress={() => setReviewModalVisible(true)}>
               <Ionicons name="pencil" size={20} color="white" />
-              <Text className="text-white text-xs font-bold mt-1">Review</Text>
+              <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold', marginTop: 4 }}>Review</Text>
             </TouchableOpacity>
           </View>
 
-          <Text className="text-white text-lg font-bold mb-2">Overview</Text>
-          <Text className="text-slate-400 text-sm leading-6 mb-6">{movie.overview}</Text>
+          <Text style={{ color: colors.text, fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}>Overview</Text>
+          <Text style={{ color: colors.textMuted, fontSize: 14, lineHeight: 24, marginBottom: 24 }}>{movie.overview}</Text>
 
-          <Text className="text-white text-lg font-bold mb-3">Cast</Text>
+          <Text style={{ color: colors.text, fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Cast</Text>
           <FlatList
             data={cast.slice(0, 10)}
             horizontal
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-              <View className="w-20 mr-4 items-center">
-                <Image source={{ uri: item.profile_path ? `https://image.tmdb.org/t/p/w185${item.profile_path}` : 'https://via.placeholder.com/150' }} className="w-16 h-16 rounded-full bg-slate-700 mb-2" resizeMode="cover" />
-                <Text className="text-white text-xs text-center font-semibold" numberOfLines={2}>{item.name}</Text>
-                <Text className="text-slate-500 text-[10px] text-center mt-1" numberOfLines={2}>{item.character}</Text>
+              <View style={{ width: 80, marginRight: 16, alignItems: 'center' }}>
+                <Image source={{ uri: item.profile_path ? `https://image.tmdb.org/t/p/w185${item.profile_path}` : 'https://via.placeholder.com/150' }} style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: colors.border, marginBottom: 8 }} resizeMode="cover" />
+                <Text style={{ color: colors.text, fontSize: 12, textAlign: 'center', fontWeight: '600' }} numberOfLines={2}>{item.name}</Text>
+                <Text style={{ color: colors.textMuted, fontSize: 10, textAlign: 'center', marginTop: 4 }} numberOfLines={2}>{item.character}</Text>
               </View>
             )}
-            className="mb-6"
+            style={{ marginBottom: 24 }}
           />
 
-          <Text className="text-white text-lg font-bold mb-4">Reviews ({reviews.length})</Text>
+          <Text style={{ color: colors.text, fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Reviews ({reviews.length})</Text>
           {reviews.length === 0 ? (
-            <Text className="text-slate-500 italic text-center py-4 mb-8">No reviews yet. Be the first to review!</Text>
+            <Text style={{ color: colors.textMuted, fontStyle: 'italic', textAlign: 'center', paddingVertical: 16, marginBottom: 32 }}>No reviews yet. Be the first to review!</Text>
           ) : (
             reviews.map((review) => (
-              <View key={review.id} className="bg-slate-800 p-4 rounded-xl mb-4 border border-slate-700">
-                <View className="flex-row justify-between items-start mb-2">
-                  <View className="flex-row items-center">
+              <View key={review.id} style={{ backgroundColor: colors.surface, padding: 16, borderRadius: 12, marginBottom: 16, borderWidth: 1, borderColor: colors.border }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     {review.userAvatar ? (
-                      <Image source={{ uri: review.userAvatar }} className="w-8 h-8 rounded-full mr-3" />
+                      <Image source={{ uri: review.userAvatar }} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 12 }} />
                     ) : (
-                      <View className="w-8 h-8 rounded-full bg-red-500 justify-center items-center mr-3">
-                        <Text className="text-white font-bold">{review.userName.charAt(0).toUpperCase()}</Text>
+                      <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                        <Text style={{ color: 'white', fontWeight: 'bold' }}>{review.userName.charAt(0).toUpperCase()}</Text>
                       </View>
                     )}
                     <View>
-                      <Text className="text-white font-bold">{review.userName}</Text>
-                      <View className="flex-row">
+                      <Text style={{ color: colors.text, fontWeight: 'bold' }}>{review.userName}</Text>
+                      <View style={{ flexDirection: 'row' }}>
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Ionicons key={star} name={star <= review.rating ? "star" : "star-outline"} size={12} color="#eab308" />
                         ))}
                       </View>
                     </View>
                   </View>
-
-                  <View className="flex-row">
+                  <View style={{ flexDirection: 'row' }}>
                     {review.userId === user?.uid && (
-                      <TouchableOpacity onPress={() => openEditModal(review)} className="mr-3">
-                        <Ionicons name="pencil" size={18} color="#94a3b8" />
-                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => openEditModal(review)} style={{ marginRight: 12 }}><Ionicons name="pencil" size={18} color={colors.textMuted} /></TouchableOpacity>
                     )}
                     {(review.userId === user?.uid || role === 'admin') && (
-                      <TouchableOpacity onPress={() => handleDeleteReview(review.id)}>
-                        <Ionicons name="trash" size={18} color="#ef4444" />
-                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => handleDeleteReview(review.id)}><Ionicons name="trash" size={18} color="#ef4444" /></TouchableOpacity>
                     )}
                   </View>
                 </View>
-                <Text className="text-slate-300 text-sm leading-5">{review.text}</Text>
+                <Text style={{ color: colors.textMuted, fontSize: 14, lineHeight: 20 }}>{review.text}</Text>
               </View>
             ))
           )}
-          <View className="h-10" />
+          <View style={{ height: 40 }} />
         </View>
       </ScrollView>
 
       <Modal visible={isReviewModalVisible} animationType="slide" transparent={true}>
-        <View className="flex-1 justify-end bg-black/60">
-          <View className="bg-slate-900 rounded-t-3xl p-6 border-t border-slate-700">
-            <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-white font-bold text-xl">{editingReviewId ? 'Edit Review' : 'Write a Review'}</Text>
-              <TouchableOpacity onPress={closeReviewModal}>
-                <Ionicons name="close" size={24} color="#94a3b8" />
-              </TouchableOpacity>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.6)' }}>
+          <View style={{ backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, borderTopWidth: 1, borderTopColor: colors.border }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 20 }}>{editingReviewId ? 'Edit Review' : 'Write a Review'}</Text>
+              <TouchableOpacity onPress={closeReviewModal}><Ionicons name="close" size={24} color={colors.textMuted} /></TouchableOpacity>
             </View>
-
-            <Text className="text-slate-400 mb-2 font-bold text-center">Tap to Rate</Text>
-            <View className="flex-row justify-center mb-6 space-x-2 gap-2">
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 24, gap: 8 }}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <TouchableOpacity key={star} onPress={() => setReviewRating(star)}>
                   <Ionicons name={star <= reviewRating ? "star" : "star-outline"} size={40} color="#eab308" />
                 </TouchableOpacity>
               ))}
             </View>
-
-            <TextInput
-              className="bg-slate-800 text-white p-4 rounded-xl mb-6 border border-slate-700 h-32"
-              placeholder="What did you think of the movie?"
-              placeholderTextColor="#64748b"
-              multiline
-              textAlignVertical="top"
-              value={reviewText}
-              onChangeText={setReviewText}
-            />
-
-            <TouchableOpacity 
-              className="bg-red-500 py-4 rounded-xl items-center"
-              onPress={handleSaveReview}
-              disabled={reviewLoading}
-            >
-              {reviewLoading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="text-white font-bold text-lg">Save Review</Text>
-              )}
+            <TextInput style={{ backgroundColor: colors.background, color: colors.text, padding: 16, borderRadius: 12, marginBottom: 24, borderWidth: 1, borderColor: colors.border, height: 120 }} placeholder="What did you think of the movie?" placeholderTextColor={colors.textMuted} multiline textAlignVertical="top" value={reviewText} onChangeText={setReviewText} />
+            <TouchableOpacity style={{ backgroundColor: colors.primary, paddingVertical: 16, borderRadius: 12, alignItems: 'center' }} onPress={handleSaveReview} disabled={reviewLoading}>
+              {reviewLoading ? <ActivityIndicator color="white" /> : <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>Save Review</Text>}
             </TouchableOpacity>
           </View>
         </View>

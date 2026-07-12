@@ -4,20 +4,19 @@ import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getUserWatchlist, toggleWatchlistStatus } from '../../../services/firestore';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { useTheme } from '../../../theme';
 
 export default function Watchlist() {
   const { user } = useAuthStore();
+  const { colors } = useTheme();
   
   const [activeTab, setActiveTab] = useState<'to_watch' | 'watched'>('to_watch');
-  
   const [watchlistData, setWatchlistData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
-      if (user?.uid) {
-        fetchWatchlist();
-      }
+      if (user?.uid) fetchWatchlist();
     }, [user])
   );
 
@@ -35,9 +34,7 @@ export default function Watchlist() {
   const handleMove = async (movie: any) => {
     if (!user?.uid) return;
     const newStatus = activeTab === 'to_watch' ? 'watched' : 'to_watch';
-    
     setWatchlistData(prev => prev.map(m => m.movieId === movie.movieId ? { ...m, status: newStatus } : m));
-    
     const success = await toggleWatchlistStatus(user.uid, { id: movie.movieId, ...movie }, newStatus);
     if (!success) {
       Alert.alert("Error", "Failed to move movie.");
@@ -50,9 +47,7 @@ export default function Watchlist() {
       { text: "Cancel", style: "cancel" },
       { text: "Remove", style: "destructive", onPress: async () => {
           if (!user?.uid) return;
-          
           setWatchlistData(prev => prev.filter(m => m.movieId !== movie.movieId));
-          
           const success = await toggleWatchlistStatus(user.uid, { id: movie.movieId }, null);
           if (!success) {
             Alert.alert("Error", "Failed to remove movie.");
@@ -65,44 +60,42 @@ export default function Watchlist() {
 
   const renderMovieCard = ({ item }: { item: any }) => (
     <TouchableOpacity 
-      className="flex-row bg-slate-800 rounded-xl mb-4 overflow-hidden border border-slate-700 mx-4"
+      style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 12, marginBottom: 16, marginHorizontal: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.border }}
       onPress={() => router.push({ pathname: '/(dashboard)/movie/[id]' as any, params: { id: item.movieId } })}
     >
       <Image 
         source={{ uri: item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : 'https://via.placeholder.com/200x300?text=No+Poster' }}
-        className="w-24 h-36 bg-slate-700"
+        style={{ width: 96, height: 144, backgroundColor: colors.border }}
         resizeMode="cover"
       />
-      <View className="flex-1 p-3 justify-between">
+      <View style={{ flex: 1, padding: 12, justifyContent: 'space-between' }}>
         <View>
-          <Text className="text-white font-bold text-lg mb-1" numberOfLines={2}>{item.title}</Text>
-          <View className="flex-row justify-between items-center pr-2">
-            <Text className="text-slate-400 text-sm">{item.release_date ? item.release_date.substring(0, 4) : 'N/A'}</Text>
-            <View className="flex-row items-center bg-slate-900 px-2 py-1 rounded-md">
+          <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 18, marginBottom: 4 }} numberOfLines={2}>{item.title}</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ color: colors.textMuted, fontSize: 14 }}>{item.release_date ? item.release_date.substring(0, 4) : 'N/A'}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.background, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
               <Ionicons name="star" size={12} color="#eab308" />
-              <Text className="text-yellow-500 font-bold text-xs ml-1">
+              <Text style={{ color: '#eab308', fontWeight: 'bold', fontSize: 12, marginLeft: 4 }}>
                 {item.vote_average ? item.vote_average.toFixed(1) : 'NR'}
               </Text>
             </View>
           </View>
         </View>
-
-        <View className="flex-row justify-end mt-2 space-x-3 gap-3">
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8, gap: 12 }}>
           <TouchableOpacity 
-            className={`px-3 py-1.5 rounded-lg flex-row items-center ${activeTab === 'to_watch' ? 'bg-green-500/20' : 'bg-red-500/20'}`}
+            style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', backgroundColor: activeTab === 'to_watch' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)' }}
             onPress={() => handleMove(item)}
           >
             <Ionicons name={activeTab === 'to_watch' ? "checkmark-circle" : "bookmark"} size={16} color={activeTab === 'to_watch' ? "#10b981" : "#ef4444"} />
-            <Text className={`text-xs font-bold ml-1 ${activeTab === 'to_watch' ? 'text-green-500' : 'text-red-500'}`}>
+            <Text style={{ fontSize: 12, fontWeight: 'bold', marginLeft: 4, color: activeTab === 'to_watch' ? '#10b981' : '#ef4444' }}>
               {activeTab === 'to_watch' ? 'Mark Watched' : 'To Watch'}
             </Text>
           </TouchableOpacity>
-
           <TouchableOpacity 
-            className="px-3 py-1.5 bg-slate-700 rounded-lg flex-row items-center"
+            style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.background, borderRadius: 8, flexDirection: 'row', alignItems: 'center' }}
             onPress={() => handleRemove(item)}
           >
-            <Ionicons name="close" size={16} color="#94a3b8" />
+            <Ionicons name="close" size={16} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
       </View>
@@ -110,35 +103,33 @@ export default function Watchlist() {
   );
 
   return (
-    <View className="flex-1 bg-slate-900 pt-12">
-      <Text className="text-white font-bold text-2xl mb-4 px-4">My Lists</Text>
-
-      <View className="flex-row bg-slate-800 p-1 rounded-xl mx-4 mb-6 border border-slate-700">
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 48 }}>
+      <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 24, marginBottom: 16, paddingHorizontal: 16 }}>My Lists</Text>
+      
+      <View style={{ flexDirection: 'row', backgroundColor: colors.surface, padding: 4, borderRadius: 12, marginHorizontal: 16, marginBottom: 24, borderWidth: 1, borderColor: colors.border }}>
         <TouchableOpacity 
-          className={`flex-1 py-2.5 items-center rounded-lg ${activeTab === 'to_watch' ? 'bg-red-500' : 'bg-transparent'}`}
+          style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8, backgroundColor: activeTab === 'to_watch' ? colors.primary : 'transparent' }}
           onPress={() => setActiveTab('to_watch')}
         >
-          <Text className={`font-bold ${activeTab === 'to_watch' ? 'text-white' : 'text-slate-400'}`}>To Watch</Text>
+          <Text style={{ fontWeight: 'bold', color: activeTab === 'to_watch' ? '#ffffff' : colors.textMuted }}>To Watch</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          className={`flex-1 py-2.5 items-center rounded-lg ${activeTab === 'watched' ? 'bg-green-500' : 'bg-transparent'}`}
+          style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8, backgroundColor: activeTab === 'watched' ? colors.primary : 'transparent' }}
           onPress={() => setActiveTab('watched')}
         >
-          <Text className={`font-bold ${activeTab === 'watched' ? 'text-white' : 'text-slate-400'}`}>Watched</Text>
+          <Text style={{ fontWeight: 'bold', color: activeTab === 'watched' ? '#ffffff' : colors.textMuted }}>Watched</Text>
         </TouchableOpacity>
       </View>
 
       {loading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#ef4444" />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : filteredList.length === 0 ? (
-        <View className="flex-1 justify-center items-center opacity-50 pb-20 px-10">
-          <Ionicons name={activeTab === 'to_watch' ? "bookmark-outline" : "checkmark-circle-outline"} size={80} color="#94a3b8" />
-          <Text className="text-slate-400 text-lg mt-4 text-center">
-            {activeTab === 'to_watch' 
-              ? "Your Watchlist is empty. Go find some movies!" 
-              : "You haven't marked any movies as watched yet."}
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', opacity: 0.5, paddingBottom: 80, paddingHorizontal: 40 }}>
+          <Ionicons name={activeTab === 'to_watch' ? "bookmark-outline" : "checkmark-circle-outline"} size={80} color={colors.textMuted} />
+          <Text style={{ color: colors.textMuted, fontSize: 18, marginTop: 16, textAlign: 'center' }}>
+            {activeTab === 'to_watch' ? "Your Watchlist is empty. Go find some movies!" : "You haven't marked any movies as watched yet."}
           </Text>
         </View>
       ) : (

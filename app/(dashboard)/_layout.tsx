@@ -7,9 +7,11 @@ import { router } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useTheme } from '../../theme';
 
 function CustomDrawerContent(props: any) {
   const { user, role, logout } = useAuthStore();
+  const { colors } = useTheme();
 
   const handleLogout = async () => {
     try {
@@ -22,68 +24,66 @@ function CustomDrawerContent(props: any) {
   };
 
   return (
-    <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1, backgroundColor: '#1e293b' }}>
-      <View className="p-5 border-b border-slate-700 mb-2">
+    <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1, backgroundColor: colors.surface }}>
+      <View style={{ padding: 20, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 8 }}>
         {user?.photoURL ? (
           <Image 
             source={{ uri: user.photoURL }} 
-            className="w-16 h-16 rounded-full mb-3 border-2 border-slate-600"
+            style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 12, borderWidth: 2, borderColor: colors.border }}
           />
         ) : (
-          <View className="w-16 h-16 bg-red-500 rounded-full justify-center items-center mb-3">
-            <Text className="text-white text-2xl font-bold">
+          <View style={{ width: 64, height: 64, backgroundColor: colors.primary, borderRadius: 32, justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
+            <Text style={{ color: '#ffffff', fontSize: 24, fontWeight: 'bold' }}>
               {user?.displayName ? user.displayName.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'U')}
             </Text>
           </View>
         )}
-        <Text className="text-white font-bold text-lg">
+        <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 18 }}>
           Hello, {user?.displayName || 'User'}
         </Text>
-        <Text className="text-slate-400 text-sm">
+        <Text style={{ color: colors.textMuted, fontSize: 14 }}>
           {user?.email || 'No email provided'}
         </Text>
       </View>
 
-      <DrawerItem label="Home" labelStyle={{ color: '#ffffff', fontSize: 16 }} onPress={() => router.push('/(dashboard)/(tabs)' as any)} />
-      <DrawerItem label="Search" labelStyle={{ color: '#ffffff', fontSize: 16 }} onPress={() => router.push('/(dashboard)/(tabs)/search' as any)} />
-      <DrawerItem label="Watchlist" labelStyle={{ color: '#ffffff', fontSize: 16 }} onPress={() => router.push('/(dashboard)/(tabs)/watchlist' as any)} />
-      <DrawerItem label="Profile" labelStyle={{ color: '#ffffff', fontSize: 16 }} onPress={() => router.push('/(dashboard)/(tabs)/profile' as any)} />
+      <DrawerItem label="Home" labelStyle={{ color: colors.text, fontSize: 16 }} onPress={() => router.push('/(dashboard)/(tabs)' as any)} />
+      <DrawerItem label="Search" labelStyle={{ color: colors.text, fontSize: 16 }} onPress={() => router.push('/(dashboard)/(tabs)/search' as any)} />
+      <DrawerItem label="Watchlist" labelStyle={{ color: colors.text, fontSize: 16 }} onPress={() => router.push('/(dashboard)/(tabs)/watchlist' as any)} />
+      <DrawerItem label="Profile" labelStyle={{ color: colors.text, fontSize: 16 }} onPress={() => router.push('/(dashboard)/(tabs)/profile' as any)} />
 
       {role === 'admin' && (
-        <DrawerItem label="Admin Panel" labelStyle={{ color: '#ef4444', fontWeight: 'bold', fontSize: 16 }} onPress={() => router.push('/(dashboard)/admin' as any)} />
+        <DrawerItem label="Admin Panel" labelStyle={{ color: colors.primary, fontWeight: 'bold', fontSize: 16 }} onPress={() => router.push('/(dashboard)/admin' as any)} />
       )}
-      <DrawerItem label="Settings" labelStyle={{ color: '#ffffff', fontSize: 16 }} onPress={() => router.push('/(dashboard)/settings' as any)} />
+      <DrawerItem label="Settings" labelStyle={{ color: colors.text, fontSize: 16 }} onPress={() => router.push('/(dashboard)/settings' as any)} />
       
-      <View className="flex-1" />
-      <TouchableOpacity className="m-4 bg-slate-800 border border-slate-700 p-4 rounded-xl flex-row justify-center" onPress={handleLogout}>
-        <Text className="text-red-500 font-bold text-base">Logout</Text>
+      <View style={{ flex: 1 }} />
+      <TouchableOpacity 
+        style={{ margin: 16, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, padding: 16, borderRadius: 12, flexDirection: 'row', justifyContent: 'center' }} 
+        onPress={handleLogout}
+      >
+        <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 16 }}>Logout</Text>
       </TouchableOpacity>
     </DrawerContentScrollView>
   );
 }
 
 export default function DashboardLayout() {
+  const { colors } = useTheme();
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer
         drawerContent={(props) => <CustomDrawerContent {...props} />}
         screenOptions={{ 
-          headerStyle: { backgroundColor: '#0f172a', borderBottomWidth: 0, shadowOpacity: 0 },
-          headerTintColor: '#ffffff',
-          drawerStyle: { backgroundColor: '#1e293b' },
+          headerStyle: { backgroundColor: colors.background, borderBottomWidth: 0, shadowOpacity: 0 },
+          headerTintColor: colors.text,
+          drawerStyle: { backgroundColor: colors.surface },
         }}
       >
         <Drawer.Screen name="(tabs)" options={{ title: 'Watchlist', headerShown: false }} />
         <Drawer.Screen name="admin" options={{ title: 'Admin Panel', headerShown: true }} />
         <Drawer.Screen name="settings" options={{ title: 'Settings', headerShown: true }} />
-        
-        <Drawer.Screen 
-          name="movie/[id]" 
-          options={{ 
-            headerShown: false,
-            drawerItemStyle: { display: 'none' } 
-          }} 
-        />
+        <Drawer.Screen name="movie/[id]" options={{ headerShown: false, drawerItemStyle: { display: 'none' } }} />
       </Drawer>
     </GestureHandlerRootView>
   );

@@ -1,23 +1,11 @@
-import { Ionicons } from "@expo/vector-icons";
-import { DrawerActions } from "@react-navigation/native";
-import { router, useNavigation } from "expo-router";
-import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  RefreshControl,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import {
-  getPopularMovies,
-  getRecommendations,
-  getTopRatedMovies,
-} from "../../../services/tmdb";
-import { useAuthStore } from "../../../store/useAuthStore";
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, Image, ActivityIndicator, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
+import { getPopularMovies, getTopRatedMovies, getRecommendations } from '../../../services/tmdb';
+import { router, useNavigation } from 'expo-router';
+import { DrawerActions } from '@react-navigation/native';
+import { useAuthStore } from '../../../store/useAuthStore';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../../theme';
 
 export default function Home() {
   const [popular, setPopular] = useState<any[]>([]);
@@ -27,6 +15,7 @@ export default function Home() {
 
   const navigation = useNavigation();
   const { user } = useAuthStore();
+  const { colors } = useTheme();
 
   useEffect(() => {
     fetchAllMovies();
@@ -37,9 +26,9 @@ export default function Home() {
     const [popularData, topRatedData, recommendedData] = await Promise.all([
       getPopularMovies(),
       getTopRatedMovies(),
-      getRecommendations(),
+      getRecommendations() 
     ]);
-
+    
     setPopular(popularData);
     setTopRated(topRatedData);
     setRecommended(recommendedData);
@@ -47,43 +36,38 @@ export default function Home() {
   };
 
   const renderMovieCard = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      className="w-36 mr-4 bg-slate-800 rounded-xl overflow-hidden border border-slate-700"
-      onPress={() =>
-        router.push({
-          pathname: "/(dashboard)/movie/[id]" as any,
-          params: { id: item.id },
-        })
-      }
+    <TouchableOpacity 
+      style={{ width: 144, marginRight: 16, backgroundColor: colors.surface, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: colors.border }}
+      onPress={() => router.push({ pathname: '/(dashboard)/movie/[id]' as any, params: { id: item.id } })}
       activeOpacity={0.7}
     >
-      <Image
+      <Image 
         source={{ uri: `https://image.tmdb.org/t/p/w342${item.poster_path}` }}
-        className="w-full h-52 bg-slate-700"
+        style={{ width: '100%', height: 208, backgroundColor: colors.border }}
         resizeMode="cover"
       />
-      <View className="p-2">
-        <Text className="text-white font-bold text-sm" numberOfLines={1}>
+      <View style={{ padding: 8 }}>
+        <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 14 }} numberOfLines={1}>
           {item.title || item.name}
         </Text>
-        <View className="flex-row justify-between items-center mt-1">
-          <Text className="text-slate-400 text-xs">
-            {item.release_date ? item.release_date.substring(0, 4) : ""}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+          <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+            {item.release_date ? item.release_date.substring(0, 4) : ''}
           </Text>
-          <Text className="text-yellow-500 font-bold text-xs">
-            ★ {item.vote_average ? item.vote_average.toFixed(1) : "NR"}
+          <Text style={{ color: '#eab308', fontWeight: 'bold', fontSize: 12 }}>
+            ★ {item.vote_average ? item.vote_average.toFixed(1) : 'NR'}
           </Text>
         </View>
       </View>
     </TouchableOpacity>
   );
 
-  const MovieCarousel = ({ title, data }: { title: string; data: any[] }) => (
-    <View className="mb-6">
-      <View className="flex-row justify-between items-end px-4 mb-3">
-        <Text className="text-white font-bold text-xl">{title}</Text>
+  const MovieCarousel = ({ title, data }: { title: string, data: any[] }) => (
+    <View style={{ marginBottom: 24 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 16, marginBottom: 12 }}>
+        <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 20 }}>{title}</Text>
         <TouchableOpacity>
-          <Text className="text-red-500 text-sm font-bold">See All</Text>
+          <Text style={{ color: colors.primary, fontSize: 14, fontWeight: 'bold' }}>See All</Text>
         </TouchableOpacity>
       </View>
       <FlatList
@@ -99,55 +83,40 @@ export default function Home() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-slate-900 justify-center items-center">
-        <ActivityIndicator size="large" color="#ef4444" />
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-slate-900">
-      <View className="flex-row justify-between items-center px-4 pt-12 pb-4 bg-slate-900">
-        <TouchableOpacity
-          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-        >
-          <Ionicons name="menu" size={28} color="#ffffff" />
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 48, paddingBottom: 16, backgroundColor: colors.background }}>
+        <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
+          <Ionicons name="menu" size={28} color={colors.text} />
         </TouchableOpacity>
-
-        <Text className="text-red-500 font-bold text-xl">Watchlist</Text>
-
-        <TouchableOpacity
-          onPress={() => router.push("/(dashboard)/(tabs)/profile")}
-        >
+        
+        <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 20 }}>Watchlist</Text>
+        
+        <TouchableOpacity onPress={() => router.push('/(dashboard)/(tabs)/profile' as any)}>
           {user?.photoURL ? (
-            <Image
-              source={{ uri: user.photoURL }}
-              className="w-8 h-8 rounded-full border border-slate-600"
-            />
+            <Image source={{ uri: user.photoURL }} style={{ width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: colors.border }} />
           ) : (
-            <View className="w-8 h-8 bg-red-500 rounded-full justify-center items-center">
-              <Text className="text-white font-bold">
-                {user?.displayName?.charAt(0) || "U"}
-              </Text>
+            <View style={{ width: 32, height: 32, backgroundColor: colors.primary, borderRadius: 16, justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>{user?.displayName?.charAt(0) || 'U'}</Text>
             </View>
           )}
         </TouchableOpacity>
       </View>
 
-      <ScrollView
+      <ScrollView 
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={loading}
-            onRefresh={fetchAllMovies}
-            tintColor="#ef4444"
-          />
-        }
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchAllMovies} tintColor={colors.primary} />}
       >
         <MovieCarousel title="Popular Movies" data={popular} />
         <MovieCarousel title="Top Rated" data={topRated} />
         <MovieCarousel title="Recommended For You" data={recommended} />
-        <View className="h-10" />
+        <View style={{ height: 40 }} />
       </ScrollView>
     </View>
   );

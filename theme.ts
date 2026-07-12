@@ -21,7 +21,7 @@ export const colors = {
 };
 
 export const useTheme = () => {
-  const { themeMode } = useThemeStore();
+  const themeMode = useThemeStore((state) => state.themeMode);
   const systemColorScheme = useColorScheme(); 
 
   const activeMode = themeMode === 'system' 
