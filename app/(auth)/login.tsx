@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { router, Link } from 'expo-router';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { Ionicons } from '@expo/vector-icons';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../services/firebase';
 import { useAuthStore } from '../../store/useAuthStore';
+
+GoogleSignin.configure({
+  webClientId: '819056028866-e83eafhdfspvojru0h81aquc0na01k2l.apps.googleusercontent.com',
+});
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -44,8 +50,51 @@ export default function Login() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    Alert.alert("Google Login", "We will implement the Native Google Sign-in next!");
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+      
+      const result = await GoogleSignin.signIn();
+      const idToken = result.data?.idToken;
+
+      if (!idToken) {
+        throw new Error("No ID Token found");
+      }
+
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+      const userCredential = await signInWithCredential(auth, googleCredential);
+      const user = userCredential.user;
+
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      
+      let userRole = 'user';
+      
+      if (!userDocSnap.exists()) {
+        await setDoc(userDocRef, {
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName,
+          avatar: user.photoURL,
+          role: 'user',
+          createdAt: new Date().toISOString()
+        });
+      } else {
+        userRole = userDocSnap.data().role || 'user';
+      }
+
+      setUser(user);
+      setRole(userRole as 'admin' | 'user');
+
+      router.replace('/(dashboard)/(tabs)' as any);
+      
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert("Google Login Failed", error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -85,11 +134,13 @@ export default function Login() {
       </TouchableOpacity>
 
       <TouchableOpacity 
-        className="bg-white py-4 rounded-lg items-center mb-8 flex-row justify-center"
+        className="bg-white py-4 rounded-lg items-center mb-8 flex-row justify-center border border-slate-300"
         onPress={handleGoogleLogin}
         disabled={loading}
+        style={{ flexDirection: 'row', alignItems: 'center' }}
       >
-        <Text className="text-slate-900 font-bold text-lg">Sign in with Google</Text>
+        <Ionicons name="logo-google" size={24} color="#db4437" />
+        <Text className="text-slate-900 font-bold text-lg ml-3">Sign in with Google</Text>
       </TouchableOpacity>
 
       <View className="flex-row justify-center">

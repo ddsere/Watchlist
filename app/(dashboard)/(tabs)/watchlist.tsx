@@ -103,7 +103,7 @@ export default function Watchlist() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 48 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: 60 }}>
       <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 24, marginBottom: 16, paddingHorizontal: 16 }}>My Lists</Text>
       
       <View style={{ flexDirection: 'row', backgroundColor: colors.surface, padding: 4, borderRadius: 12, marginHorizontal: 16, marginBottom: 24, borderWidth: 1, borderColor: colors.border }}>

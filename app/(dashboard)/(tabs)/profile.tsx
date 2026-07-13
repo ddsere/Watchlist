@@ -120,7 +120,7 @@ export default function Profile() {
         renderItem={renderReviewItem}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <View style={{ paddingTop: 48, paddingBottom: 24 }}>
+          <View style={{ paddingTop: 70, paddingBottom: 24 }}>
             <View style={{ alignItems: 'center', paddingHorizontal: 16, marginBottom: 24 }}>
               {user?.photoURL ? (
                 <Image source={{ uri: user.photoURL }} style={{ width: 96, height: 96, borderRadius: 48, borderWidth: 2, borderColor: colors.primary, marginBottom: 12 }} />
