@@ -11,7 +11,6 @@ Notifications.setNotificationHandler({
   }),
 });
 
-
 export async function requestNotificationPermissions() {
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
@@ -24,11 +23,16 @@ export async function requestNotificationPermissions() {
   return finalStatus === 'granted';
 }
 
-
 export async function scheduleWeekendReminders() {
   const hasPermission = await requestNotificationPermissions();
   if (!hasPermission) return false;
 
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('weekend-reminders', {
+      name: 'Weekend Reminders',
+      importance: Notifications.AndroidImportance.HIGH,
+    });
+  }
   
   await Notifications.cancelAllScheduledNotificationsAsync();
 
@@ -37,11 +41,13 @@ export async function scheduleWeekendReminders() {
       title: "Weekend Movie Time! 🍿",
       body: "It's the weekend! Grab some popcorn and check out your Watchlist for some great movies to watch.",
     },
+
     trigger: {
+      type: 'weekly',
+      channelId: 'weekend-reminders',
       weekday: 7, 
       hour: 10,   
       minute: 0,
-      repeats: true, 
     } as any, 
   });
   
