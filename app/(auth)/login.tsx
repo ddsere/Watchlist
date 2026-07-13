@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, Image } from 'react-native';
 import { router, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -139,8 +139,12 @@ export default function Login() {
         disabled={loading}
         style={{ flexDirection: 'row', alignItems: 'center' }}
       >
-        <Ionicons name="logo-google" size={24} color="#db4437" />
-        <Text className="text-slate-900 font-bold text-lg ml-3">Sign in with Google</Text>
+        <Image 
+          source={{ uri: 'https://developers.google.com/identity/images/g-logo.png' }} 
+          style={{ width: 24, height: 24, marginRight: 12 }} 
+          resizeMode="contain"
+        />
+        <Text className="text-slate-900 font-bold text-lg">Sign in with Google</Text>
       </TouchableOpacity>
 
       <View className="flex-row justify-center">
