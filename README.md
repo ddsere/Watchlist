@@ -1,50 +1,44 @@
-# Welcome to your Expo app 👋
+# 🎬 Watchlist - Movie Tracking Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern, cross-platform mobile application built with React Native and Expo that allows users to discover movies, manage their personal watchlists, and receive weekly movie recommendations. 
 
-## Get started
+## ✨ Key Features
 
-1. Install dependencies
+*   **Authentication:** Secure Email/Password login and Native Google Sign-in integration.
+*   **Movie Discovery:** Browse Popular, Top Rated, and Recommended movies seamlessly using the TMDB API.
+*   **Personalized Watchlist:** Save and manage favorite movies. Data is synchronized in real-time across devices using Firebase Firestore.
+*   **Dynamic Theming:** Fully reactive Light and Dark mode UI, managed via global state.
+*   **Smart Search & Filtering:** Search for movies by title or filter by specific genres with a beautifully crafted UI.
+*   **Local Push Notifications:** Automated weekly weekend reminders to check out new movies, utilizing local device schedulers (No external servers needed).
+*   **Custom Typography:** Cinematic UI aesthetics using custom Google Fonts (`Bebas Neue`, `Jersey 25`).
 
+## 🛠️ Technology Stack
+
+**Frontend (Mobile App):**
+*   [React Native](https://reactnative.dev/) & [Expo](https://expo.dev/) (Managed Workflow)
+*   [Expo Router](https://docs.expo.dev/router/introduction/) (File-based routing, Drawer & Tab Navigation)
+*   [Zustand](https://github.com/pmndrs/zustand) (Lightweight Global State Management for Auth & Theme)
+
+**Backend & Database:**
+*   [Firebase Authentication](https://firebase.google.com/docs/auth) (Email & Google OAuth 2.0)
+*   [Firebase Cloud Firestore](https://firebase.google.com/docs/firestore) (NoSQL Database for user data)
+
+**APIs & Services:**
+*   [TMDB REST API](https://developer.themoviedb.org/docs) (Movie Data Fetching)
+*   [Expo Application Services (EAS)](https://expo.dev/eas) (Cloud APK Building)
+*   Expo Notifications (Local Push Notifications)
+
+## 🚀 Getting Started
+
+### Prerequisites
+*   Node.js installed
+*   Expo CLI installed globally
+*   A Firebase Project with Authentication and Firestore enabled
+*   A TMDB API Key
+
+### Installation
+
+1. **Clone the repository:**
    ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+   git clone [https://github.com/yourusername/watchlist-app.git](https://github.com/yourusername/watchlist-app.git)
+   cd watchlist-app
